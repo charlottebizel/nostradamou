@@ -1,0 +1,49 @@
+@startuml database.puml
+
+class User {
+id
+name
+email
+password
+preferred_model
+}
+
+class Conversation {
+id
+user_id
+title
+model
+created_at
+updated_at
+}
+
+class Message {
+id
+conversation_id
+role
+content
+created_at
+updated_at
+}
+
+class SimpleAskService
+
+class ConversationController
+
+class MessageController
+
+class OpenRouterAPI <<external>>
+
+User "1" -- "0..*" Conversation
+Conversation "1" -- "0..*" Message
+
+ConversationController ..> Conversation
+ConversationController ..> User
+
+MessageController ..> Message
+MessageController ..> Conversation
+MessageController ..> SimpleAskService
+
+SimpleAskService ..> OpenRouterAPI
+
+@enduml
