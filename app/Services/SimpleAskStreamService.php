@@ -75,6 +75,40 @@ class SimpleAskStreamService
     }
 
     /**
+     * Génère un titre mystique pour la conversation.
+     */
+    public function generateTitle(string $message): string
+    {
+        try {
+            $response = Http::withToken($this->apiKey)
+                ->timeout(10)
+                ->post("{$this->baseUrl}/chat/completions", [
+                    'model' => self::DEFAULT_MODEL,
+                    'messages' => [
+                        [
+                            'role' => 'system',
+                            'content' => "Tu es un oracle. Génère un titre ultra court (max 5 mots) et mystique pour résumer la demande. Réponds UNIQUEMENT par le titre, sans guillemets ni fioritures."
+                        ],
+                        [
+                            'role' => 'user',
+                            'content' => $message
+                        ]
+                    ],
+                    'temperature' => 0.7,
+                ]);
+
+            if ($response->successful()) {
+                $title = trim($response->json('choices.0.message.content', 'Nouvelle prophétie'), " \t\n\r\0\x0B\"'");
+                return empty($title) ? 'Nouvelle prophétie' : $title;
+            }
+        } catch (\Exception $e) {
+            // On ignore l'erreur pour ne pas bloquer le processus
+        }
+
+        return 'Nouvelle prophétie';
+    }
+
+    /**
      * Stream un message en temps réel vers la sortie.
      * Output le contenu texte directement (compatible avec useStream de Laravel).
      */

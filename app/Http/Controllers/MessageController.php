@@ -62,7 +62,7 @@ class MessageController extends Controller
 
         // 3. Appel IA via Stream
         return response()->stream(
-            function () use ($messages, $conversation, $request, $service, $streamService) {
+            function () use ($messages, $conversation, $request, $streamService) {
                 // 🚀 ÉTAPE 1 : Désactiver complètement les tampons de sortie PHP/Laravel
                 session_write_close(); // Libère la session pour ne pas bloquer les requêtes
                 ini_set('zlib.output_compression', '0');
@@ -87,18 +87,6 @@ class MessageController extends Controller
                     'role' => 'assistant',
                     'content' => $answer,
                 ]);
-
-                // 5. Génération du titre si première réponse (synchronement juste après la fin du stream visuel)
-                if (!$conversation->title && $conversation->messages()->count() <= 2) {
-                    $title = $service->sendMessage([
-                        [
-                            'role' => 'user',
-                            'content' => "Donne un titre mystique et court (max 5 mots) comme un oracle : " . $request->message
-                        ]
-                    ]);
-
-                    $conversation->update(['title' => $title]);
-                }
             },
             200,
             [

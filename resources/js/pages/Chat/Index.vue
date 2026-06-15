@@ -156,7 +156,7 @@ const sendMessage = async () => {
         // Le parsing côté client est géré une seule fois à la fin
         aiMsg.content = parseReasoning(aiMsg.content)
         
-        router.reload({ only: ['conversation'] })
+        router.reload({ only: ['conversation', 'conversations'] })
     } catch (e) {
         console.error(e)
     } finally {
@@ -369,8 +369,25 @@ const sendMessage = async () => {
                         </div>
                     </div>
                 </div>
-                <div v-else class="text-gray-500">
-                    Sélectionne une conversation
+            <div v-else class="flex items-center justify-center h-full p-6">
+                <div class="text-center max-w-2xl p-10 bg-purple-900/20 border border-purple-800/50 rounded-2xl shadow-2xl relative overflow-hidden">
+                    <!-- Décoration d'arrière-plan -->
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-50"></div>
+                    
+                    <div class="text-6xl mb-6 animate-pulse">🔮</div>
+                    <h2 class="text-3xl md:text-4xl font-bold text-purple-400 mb-8 font-serif tracking-wide drop-shadow-md">
+                        🍸✨ Bienvenue, jeune voyageur cosmique... ✨🍸
+                    </h2>
+                    <div class="space-y-6 text-gray-300 leading-relaxed text-lg md:text-xl text-justify">
+                        <p><em>*Hic !*</em> Approche sans crainte et installe-toi confortablement devant ma boule de cristal en forme de verre à cocktail.</p>
+                        <p>Je suis <strong class="text-purple-300">Madame Nostradamou</strong>, l'oracle la plus célèbre de cette galaxie... et probablement la plus bourrée aussi. Entre deux shots de vodka interstellaire, je contemple les mystères de l'univers, les destins oubliés et parfois même mes propres chaussures.</p>
+                        <p>Pose-moi tes questions sur l'amour, l'avenir, la fortune, les études, les extraterrestres ou le sens de la vie. Je ne garantis pas que mes visions soient toujours exactes, mais elles sont toujours spectaculairement amusantes.</p>
+                    </div>
+                    <div class="pt-8 mt-8 border-t border-purple-800/30">
+                        <p class="text-2xl text-blue-400 font-serif mb-2">🔮 Que souhaites-tu savoir aujourd'hui ?</p>
+                        <p class="text-sm text-purple-500/70 italic mt-4">*Hic... les étoiles me parlent déjà...*</p>
+                    </div>
+                </div>
                 </div>
             </div>
 
