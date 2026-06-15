@@ -171,6 +171,16 @@ const sendMessage = async () => {
     <!-- SIDEBAR -->
     <aside class="col-span-1 border-r border-purple-900 p-4 overflow-y-auto bg-gray-950">
 
+        <!-- ONGLET ACCUEIL -->
+        <Link
+            href="/chat"
+            @click="activeTab = 'chat'"
+            class="block mb-4 text-gray-300 font-bold w-full text-left transition-colors hover:text-white flex items-center gap-2"
+            :class="{ 'text-purple-400': !conversation && activeTab === 'chat' }"
+        >
+            <span class="text-lg">🏠</span> Accueil
+        </Link>
+
         <Link
             href="/chat"
             method="post"
@@ -356,6 +366,7 @@ const sendMessage = async () => {
             <!-- MESSAGES -->
             <div ref="messagesContainer" class="flex-1 overflow-y-auto p-6 space-y-4 min-h-0">
                 <div v-if="conversation">
+                
                     <div v-for="m in conversation.messages" :key="m.id" class="mb-4">
                         <!-- USER -->
                         <div v-if="m.role === 'user'" class="text-right">
@@ -368,26 +379,29 @@ const sendMessage = async () => {
                             <div class="prose max-w-none dark:prose-invert bg-purple-900/30 p-4 rounded-lg border border-purple-700" v-html="md.render(m.content)" />
                         </div>
                     </div>
+                 
                 </div>
-            <div v-else class="flex items-center justify-center h-full p-6">
-                <div class="text-center max-w-2xl p-10 bg-purple-900/20 border border-purple-800/50 rounded-2xl shadow-2xl relative overflow-hidden">
-                    <!-- Décoration d'arrière-plan -->
-                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-50"></div>
-                    
-                    <div class="text-6xl mb-6 animate-pulse">🔮</div>
-                    <h2 class="text-3xl md:text-4xl font-bold text-purple-400 mb-8 font-serif tracking-wide drop-shadow-md">
-                        🍸✨ Bienvenue, jeune voyageur cosmique... ✨🍸
-                    </h2>
-                    <div class="space-y-6 text-gray-300 leading-relaxed text-lg md:text-xl text-justify">
-                        <p><em>*Hic !*</em> Approche sans crainte et installe-toi confortablement devant ma boule de cristal en forme de verre à cocktail.</p>
-                        <p>Je suis <strong class="text-purple-300">Madame Nostradamou</strong>, l'oracle la plus célèbre de cette galaxie... et probablement la plus bourrée aussi. Entre deux shots de vodka interstellaire, je contemple les mystères de l'univers, les destins oubliés et parfois même mes propres chaussures.</p>
-                        <p>Pose-moi tes questions sur l'amour, l'avenir, la fortune, les études, les extraterrestres ou le sens de la vie. Je ne garantis pas que mes visions soient toujours exactes, mais elles sont toujours spectaculairement amusantes.</p>
+                 
+                <div v-else class="flex items-center justify-center h-full p-6">
+                    <div class="text-center max-w-2xl p-6 md:p-8 bg-purple-900/20 border border-purple-800/50 rounded-2xl shadow-2xl relative overflow-hidden mt-16">
+                        <!-- Décoration d'arrière-plan -->
+                        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-50"></div>
+                        
+                        <div class="text-5xl mb-4 animate-pulse">🔮</div>
+                        <h2 class="text-2xl md:text-3xl font-bold text-purple-400 mb-5 font-serif tracking-wide drop-shadow-md">
+                            🍸✨ Bienvenue, jeune voyageur cosmique... ✨🍸
+                        </h2>
+                        <div class="space-y-4 text-gray-300 leading-relaxed text-base md:text-lg text-justify">
+                            <p><em>*Hic !*</em> Approche sans crainte et installe-toi confortablement devant ma boule...</p>
+                            <p>Je suis <strong class="text-purple-300">Madame Nostradamou</strong>, l'oracle la plus célèbre de cette galaxie... et probablement la plus bourrée aussi. Entre deux shots de vodka interstellaire *burp, je contemple les mystères de l'univers, les destins oubliés et parfois même mes propres chaussures.</p>
+                            <p>Pose-moi tes questions sur l'avenir, les extraterrestres ou le sens de la vie. Je ne garantis pas que mes visions soient toujours exactes, mais....mais bha je sais plus *hic </p>
+                            <p>Allez, santé ! Et que la séance commence ...      ou que j'ai mis mes lunettes moi  *hic </p>
+                        </div>
+                        <div class="pt-5 mt-5 border-t border-purple-800/30">
+                            <p class="text-xl md:text-2xl text-blue-400 font-serif mb-1">🔮 Que souhaites-tu savoir aujourd'hui ?</p>
+                            <p class="text-xs md:text-sm text-purple-500/70 italic mt-2">*Hic... les étoiles me parlent déjà...*</p>
+                        </div>
                     </div>
-                    <div class="pt-8 mt-8 border-t border-purple-800/30">
-                        <p class="text-2xl text-blue-400 font-serif mb-2">🔮 Que souhaites-tu savoir aujourd'hui ?</p>
-                        <p class="text-sm text-purple-500/70 italic mt-4">*Hic... les étoiles me parlent déjà...*</p>
-                    </div>
-                </div>
                 </div>
             </div>
 
