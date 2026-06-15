@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use App\Services\SimpleAskStreamService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -27,11 +26,11 @@ class AskStreamController extends Controller
      */
     public function index(Request $request): Response
     {
-        /** @var User|null $user */
+        /** @var \App\Models\User|null $user */
         $user = $request->user();
 
         $modelId = $request->input('model')
-            ?? $user?->model
+            ?? $user?->preferred_model
             ?? SimpleAskStreamService::DEFAULT_MODEL;
 
         return Inertia::render('AskStream/Index', [
@@ -54,10 +53,10 @@ class AskStreamController extends Controller
         ]);
 
         // Update user's preferred model
-        /** @var User|null $user */
+        /** @var \App\Models\User|null $user */
         $user = $request->user();
-        if ($user && $user->model !== $validated['model']) {
-            $user->update(['model' => $validated['model']]);
+        if ($user && $user->preferred_model !== $validated['model']) {
+            $user->update(['preferred_model' => $validated['model']]);
         }
 
         $messages = [['role' => 'user', 'content' => $validated['message']]];
@@ -66,13 +65,25 @@ class AskStreamController extends Controller
         $reasoningEffort = $validated['reasoning_effort'] ?? null;
 
         return response()->stream(
-            function () use ($messages, $model, $temperature, $reasoningEffort, $user): void {
-                $this->streamService->streamToOutput($messages, $model, $temperature, $reasoningEffort, $user);
+            function () use ($messages, $model, $temperature, $reasoningEffort): void {
+                // Désactiver complètement les tampons de sortie PHP/Laravel
+                session_write_close();
+                ini_set('zlib.output_compression', '0');
+                ini_set('implicit_flush', '1');
+                ob_implicit_flush(true);
+                if (function_exists('apache_setenv')) apache_setenv('no-gzip', '1');
+
+                while (ob_get_level() > 0) {
+                    ob_end_flush();
+                }
+                $this->streamService->streamToOutput($messages, $model, $temperature, $reasoningEffort, true);
             },
-            headers: [
-                'Content-Type' => 'text/plain; charset=utf-8',
-                'Cache-Control' => 'no-cache, no-store',
+            200,
+            [
+                'Content-Type' => 'text/event-stream; charset=utf-8',
+                'Cache-Control' => 'no-cache, no-store, must-revalidate',
                 'X-Accel-Buffering' => 'no',
+                'Content-Encoding' => 'none',
             ]
         );
     }

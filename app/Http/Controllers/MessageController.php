@@ -64,6 +64,12 @@ class MessageController extends Controller
         return response()->stream(
             function () use ($messages, $conversation, $request, $service, $streamService) {
                 // 🚀 ÉTAPE 1 : Désactiver complètement les tampons de sortie PHP/Laravel
+                session_write_close(); // Libère la session pour ne pas bloquer les requêtes
+                ini_set('zlib.output_compression', '0');
+                ini_set('implicit_flush', '1');
+                ob_implicit_flush(true);
+                if (function_exists('apache_setenv')) apache_setenv('no-gzip', '1');
+
                 while (ob_get_level() > 0) {
                     ob_end_flush();
                 }
@@ -72,8 +78,7 @@ class MessageController extends Controller
                     $messages,
                     $conversation->model,
                     1.0,
-                    null,
-                    $request->user()
+                    null
                 );
 
                 // 4. Sauvegarde réponse IA une fois le stream terminé

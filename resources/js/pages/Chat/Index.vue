@@ -1,6 +1,6 @@
 <script setup>
 import { useForm, Link, router, usePage } from '@inertiajs/vue3'
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch, reactive } from 'vue'
 import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/github-dark.css'
@@ -118,11 +118,11 @@ const sendMessage = async () => {
         content: userMessage
     })
     
-    const aiMsg = {
+    const aiMsg = reactive({
         id: Date.now() + 1,
         role: 'assistant',
         content: ''
-    }
+    })
     props.conversation.messages.push(aiMsg)
     
     scrollToBottom()

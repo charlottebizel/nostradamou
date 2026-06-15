@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Models\User;
+
+use Illuminate\Support\Facades\Auth;
 use Generator;
 use Illuminate\Support\Facades\Http;
 use Psr\Http\Message\StreamInterface;
@@ -25,8 +26,8 @@ class SimpleAskStreamService
 
     public function __construct()
     {
-        $this->apiKey = config('services.openrouter.api_key') ?? '';
-        $this->baseUrl = rtrim(config('services.openrouter.base_url', 'https://openrouter.ai/api/v1') ?? 'https://openrouter.ai/api/v1', '/');
+        $this->apiKey = config('services.openrouter.api_key');
+        $this->baseUrl = rtrim(config('services.openrouter.base_url', 'https://openrouter.ai/api/v1'), '/');
     }
 
     /**
@@ -82,35 +83,54 @@ class SimpleAskStreamService
         ?string $model = null,
         float $temperature = 1.0,
         ?string $reasoningEffort = null,
-        ?User $user = null
+        bool $asSse = false
     ): string {
-        $response = $this->sendStreamRequest($messages, $model, $temperature, $reasoningEffort, $user);
+        $response = $this->sendStreamRequest($messages, $model, $temperature, $reasoningEffort);
 
         if ($response->failed()) {
-            echo "[ERROR] " . $response->json('error.message', 'HTTP Error');
+            $errorMsg = "[ERROR] " . $response->json('error.message', 'HTTP Error');
+            if ($asSse) {
+                echo "data: " . str_replace("\n", "\ndata: ", $errorMsg) . "\n\n";
+            } else {
+                echo $errorMsg;
+            }
             $this->flush();
-            return "";
+            return $errorMsg;
         }
 
         $fullResponse = "";
 
         foreach ($this->parseSSEStream($response->toPsrResponse()->getBody()) as $event) {
             if ($event['type'] === 'error') {
-                echo "[ERROR] " . $event['data'];
+                $errorMsg = "[ERROR] " . $event['data'];
+                if ($asSse) {
+                    echo "data: " . str_replace("\n", "\ndata: ", $errorMsg) . "\n\n";
+                } else {
+                    echo $errorMsg;
+                }
                 $this->flush();
                 return $fullResponse;
             }
 
-            if ($event['type'] === 'content' && $event['data']) {
-                echo $event['data'];
+            if ($event['type'] === 'content' && $event['data'] !== null && $event['data'] !== '') {
+                if ($asSse) {
+                    echo "data: " . str_replace("\n", "\ndata: ", $event['data']) . "\n\n";
+                } else {
+                    echo $event['data'];
+                }
                 $fullResponse .= $event['data'];
                 $this->flush();
             }
 
             // Pour le reasoning, on utilise un préfixe spécial
-            if ($event['type'] === 'reasoning' && $event['data']) {
-                echo "[REASONING]" . $event['data'] . "[/REASONING]";
-                $fullResponse .= "[REASONING]" . $event['data'] . "[/REASONING]";
+            if ($event['type'] === 'reasoning' && $event['data'] !== null && $event['data'] !== '') {
+                $reasoningChunk = "[REASONING]" . $event['data'] . "[/REASONING]";
+                if ($asSse) {
+                    echo "data: " . str_replace("\n", "\ndata: ", $reasoningChunk) . "\n\n";
+                } else {
+                    echo $reasoningChunk;
+                }
+                $fullResponse .= $reasoningChunk;
                 $this->flush();
             }
         }
@@ -136,12 +156,11 @@ class SimpleAskStreamService
         array $messages,
         ?string $model,
         float $temperature,
-        ?string $reasoningEffort,
-        ?User $user
+        ?string $reasoningEffort
     ): \Illuminate\Http\Client\Response {
         $payload = [
             'model' => $model ?? self::DEFAULT_MODEL,
-            'messages' => [$this->getSystemPrompt($user), ...$messages],
+            'messages' => [$this->getSystemPrompt(), ...$messages],
             'temperature' => $temperature,
             'stream' => true,
         ];
@@ -192,11 +211,11 @@ class SimpleAskStreamService
             return null;
         }
 
-        if (!str_starts_with($line, 'data: ')) {
+        if (!str_starts_with($line, 'data:')) {
             return null;
         }
 
-        $data = substr($line, 6);
+        $data = trim(substr($line, 5));
 
         if ($data === '[DONE]') {
             return ['type' => 'done', 'data' => null];
@@ -219,15 +238,15 @@ class SimpleAskStreamService
 
             $delta = $parsed['choices'][0]['delta'] ?? [];
 
-            if (!empty($delta['content'])) {
+            if (isset($delta['content']) && $delta['content'] !== null) {
                 return ['type' => 'content', 'data' => $delta['content']];
             }
 
-            if (!empty($delta['reasoning'])) {
+            if (isset($delta['reasoning']) && $delta['reasoning'] !== null) {
                 return ['type' => 'reasoning', 'data' => $delta['reasoning']];
             }
 
-            if (!empty($delta['reasoning_content'])) {
+            if (isset($delta['reasoning_content']) && $delta['reasoning_content'] !== null) {
                 return ['type' => 'reasoning', 'data' => $delta['reasoning_content']];
             }
 
@@ -239,32 +258,18 @@ class SimpleAskStreamService
 
     /**
      * Retourne le prompt système.
-     *
-     * @param User|null $user
-     * @return array{role: 'system', content: string}
      */
-    private function getSystemPrompt(?User $user): array
+    private function getSystemPrompt(): array
     {
-        $instructions = "";
-        
-        if ($user && $user->settings) {
-            $settings = is_string($user->settings) ? json_decode($user->settings, true) : $user->settings;
-            if (is_array($settings)) {
-                $instructions = "\n\n[DIRECTIVES DE L'UTILISATEUR]\nRespecte scrupuleusement ces paramètres :\n";
-                foreach ($settings as $key => $value) {
-                    if (!empty($value)) {
-                        $instructions .= "- " . ucfirst(str_replace('_', ' ', $key)) . " : " . $value . "\n";
-                    }
-                }
-            }
-        }
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
 
         return [
             'role' => 'system',
             'content' => view('prompts.system', [
                 'now' => now()->locale('fr')->format('l d F Y H:i'),
                 'user' => $user?->name ?? 'l\'utilisateur',
-            ])->render() . $instructions,
+            ])->render(),
         ];
     }
 }
