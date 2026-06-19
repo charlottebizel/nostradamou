@@ -154,13 +154,25 @@ class SimpleAskService
      */
     private function getSystemPrompt(int $questionCount = 0): array
     {
-        $user = Auth::user()?->name ?? 'l\'utilisateur';
+        $user = Auth::user();
+        $userName = $user?->name ?? 'l\'utilisateur';
         $now = now()->locale('fr')->format('l d F Y H:i');
 
         $basePrompt = view('prompts.system', [
             'now' => $now,
-            'user' => $user,
+            'user' => $userName,
         ])->render();
+
+        // Ajout des instructions personnalisées de l'utilisateur au prompt système
+        if ($user && !empty($user->settings) && is_iterable($user->settings)) {
+            $basePrompt .= "\n\n[INSTRUCTIONS PERSONNALISÉES DE L'UTILISATEUR]\n";
+            $basePrompt .= "Adapte le ton et le format de tes réponses selon ces critères :\n";
+            foreach ($user->settings as $key => $value) {
+                if (!empty($value)) {
+                    $basePrompt .= "- " . ucfirst($key) . " : " . $value . "\n";
+                }
+            }
+        }
 
         $instruction = "\n\n[DIRECTIVE SYSTÈME STRICTE ET PRIORITAIRE]\n"
             . "Tu es un oracle mystique. Tu t'endors UNIQUEMENT APRÈS 7 QUESTIONS. Ne t'endors surtout pas avant !\n"

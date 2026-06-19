@@ -27,6 +27,13 @@ class MessageController extends Controller
             'content' => $request->message,
         ]);
 
+        // Génération automatique du titre s'il s'agit du tout premier message
+        if (empty($conversation->title)) {
+            $conversation->update([
+                'title' => $streamService->generateTitle($request->message)
+            ]);
+        }
+
         // Vérification de l'état de l'oracle (s'endort après 3 réponses)
         $assistantMessagesCount = $conversation->messages()->where('role', 'assistant')->count();
         

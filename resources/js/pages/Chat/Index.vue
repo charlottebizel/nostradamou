@@ -392,14 +392,14 @@ const sendMessage = async () => {
                             🍸✨ Bienvenue, jeune voyageur cosmique... ✨🍸
                         </h2>
                         <div class="space-y-4 text-gray-300 leading-relaxed text-base md:text-lg text-justify">
-                            <p><em>*Hic !*</em> Approche sans crainte et installe-toi confortablement devant ma boule...</p>
-                            <p>Je suis <strong class="text-purple-300">Madame Nostradamou</strong>, l'oracle la plus célèbre de cette galaxie... et probablement la plus bourrée aussi. Entre deux shots de vodka interstellaire *burp, je contemple les mystères de l'univers, les destins oubliés et parfois même mes propres chaussures.</p>
-                            <p>Pose-moi tes questions sur l'avenir, les extraterrestres ou le sens de la vie. Je ne garantis pas que mes visions soient toujours exactes, mais....mais bha je sais plus *hic </p>
-                            <p>Allez, santé ! Et que la séance commence ...      ou que j'ai mis mes lunettes moi  *hic </p>
+                            <p><em>*Hic !*</em> Approche sans crainte et installe-toi confortablement devant ma boule magique...</p>
+                            <p>Je suis <strong class="text-purple-300">Madame Nostradamou</strong>, l'oracle la plus célèbre de cette galaxie... et probablement la plus bourrée aussi. Entre deux shots de vodka interstellaire <em>*burp</em>, je contemple les mystères de l'univers, les destins oubliés et parfois même mes propres chaussures.</p>
+                            <p>Pose-moi tes questions sur l'avenir, les extraterrestres ou le sens de la vie. Je ne garantis pas que mes visions soient toujours exactes, mais....mais bha je sais plus <em>*Hic</em> </p>
+                            <p>Allez, santé ! Et que la séance commence ...      <em>ou que j'ai mis mes lunettes moi ...*Hic</em> </p>
                         </div>
                         <div class="pt-5 mt-5 border-t border-purple-800/30">
                             <p class="text-xl md:text-2xl text-blue-400 font-serif mb-1">🔮 Que souhaites-tu savoir aujourd'hui ?</p>
-                            <p class="text-xs md:text-sm text-purple-500/70 italic mt-2">*Hic... les étoiles me parlent déjà...*</p>
+                            <p class="text-xs md:text-sm text-purple-500/70 italic mt-2"><em>*Hic</em> pour commencer clic sur nouvelle conversation ... les étoiles me parlent déjà...*</p>
                         </div>
                     </div>
                 </div>

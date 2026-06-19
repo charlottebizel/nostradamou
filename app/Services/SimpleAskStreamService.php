@@ -298,12 +298,25 @@ class SimpleAskStreamService
         /** @var \App\Models\User|null $user */
         $user = Auth::user();
 
+        $content = view('prompts.system', [
+            'now' => now()->locale('fr')->format('l d F Y H:i'),
+            'user' => $user?->name ?? 'l\'utilisateur',
+        ])->render();
+
+        // Ajout des instructions personnalisées de l'utilisateur au prompt système
+        if ($user && !empty($user->settings) && is_iterable($user->settings)) {
+            $content .= "\n\n[INSTRUCTIONS PERSONNALISÉES DE L'UTILISATEUR]\n";
+            $content .= "Adapte le ton et le format de tes réponses selon ces critères :\n";
+            foreach ($user->settings as $key => $value) {
+                if (!empty($value)) {
+                    $content .= "- " . ucfirst($key) . " : " . $value . "\n";
+                }
+            }
+        }
+
         return [
             'role' => 'system',
-            'content' => view('prompts.system', [
-                'now' => now()->locale('fr')->format('l d F Y H:i'),
-                'user' => $user?->name ?? 'l\'utilisateur',
-            ])->render(),
+            'content' => $content,
         ];
     }
 }
