@@ -27,3 +27,21 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Secrets et clés API
+.env.local
+.env.*.local
+secrets.json
+credentials.json
+apikeys.json
+
+# Certificats et clés privées
+*.pem
+*.p12
+*.pfx
+
+# Cache divers
+*.cache
+
+# Fichiers OS Windows
+Thumbs.db
