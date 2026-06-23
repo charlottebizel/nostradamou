@@ -5,6 +5,7 @@ use App\Http\Controllers\AskController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\AskStreamController;
+use App\Http\Controllers\UserController;
 
 Route::inertia('/', 'Welcome')->name('home');
 
@@ -36,6 +37,9 @@ Route::middleware('auth')->group(function () {
         
     Route::delete('/chat/{conversation}',
         [ConversationController::class, 'destroy']);
+    
+    Route::post('/user/settings', [UserController::class, 'updateSettings'])
+        ->name('user.settings.update');
     
 });
 

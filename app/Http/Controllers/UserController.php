@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Conversation;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
@@ -14,7 +15,7 @@ class UserController extends Controller
     {
         $request->validate(['model' => 'required|string']);
 
-        $request->user()->update(['model' => $request->model]);
+        $request->user()->update(['preferred_model' => $request->model]);
 
         if ($request->conversation_id) {
             Conversation::where('id', $request->conversation_id)
@@ -28,20 +29,23 @@ class UserController extends Controller
     /**
      * Met à jour les instructions personnalisées de l'utilisateur.
      */
-    public function updateSettings(Request $request)
+    public function updateSettings(Request $request): RedirectResponse
     {
+        /** @var \App\Models\User $user */
+        $user = $request->user();
+
         $validated = $request->validate([
-            'profession' => 'nullable|string',
-            'interests' => 'nullable|string',
+            'profession' => 'nullable|string|max:255',
+            'interests' => 'nullable|string|max:255',
             'expertise_level' => 'nullable|string',
-            'goals' => 'nullable|string',
+            'goals' => 'nullable|string|max:255',
             'tone' => 'nullable|string',
             'format' => 'nullable|string',
             'length' => 'nullable|string',
             'explanation_style' => 'nullable|string',
         ]);
 
-        $request->user()->update(['settings' => $validated]);
+        $user->update(['settings' => $validated]);
 
         return back();
     }

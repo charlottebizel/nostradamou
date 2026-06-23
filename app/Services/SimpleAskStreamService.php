@@ -117,12 +117,13 @@ class SimpleAskStreamService
         ?string $model = null,
         float $temperature = 1.0,
         ?string $reasoningEffort = null,
-        bool $asSse = false
+        bool $asSse = false,
+        int $assistantMessagesCount = 0
     ): string {
-        $response = $this->sendStreamRequest($messages, $model, $temperature, $reasoningEffort);
+        $response = $this->sendStreamRequest($messages, $model, $temperature, $reasoningEffort, $assistantMessagesCount);
 
         if ($response->failed()) {
-            $errorMsg = "[ERROR] " . $response->json('error.message', 'HTTP Error');
+            $errorMsg = "[ERREUR] " . $response->json('error.message', 'Erreur HTTP');
             if ($asSse) {
                 echo "data: " . str_replace("\n", "\ndata: ", $errorMsg) . "\n\n";
             } else {
@@ -136,7 +137,7 @@ class SimpleAskStreamService
 
         foreach ($this->parseSSEStream($response->toPsrResponse()->getBody()) as $event) {
             if ($event['type'] === 'error') {
-                $errorMsg = "[ERROR] " . $event['data'];
+                $errorMsg = "[ERREUR] " . $event['data'];
                 if ($asSse) {
                     echo "data: " . str_replace("\n", "\ndata: ", $errorMsg) . "\n\n";
                 } else {
@@ -190,11 +191,12 @@ class SimpleAskStreamService
         array $messages,
         ?string $model,
         float $temperature,
-        ?string $reasoningEffort
+        ?string $reasoningEffort,
+        int $assistantMessagesCount = 0
     ): \Illuminate\Http\Client\Response {
         $payload = [
             'model' => $model ?? self::DEFAULT_MODEL,
-            'messages' => [$this->getSystemPrompt(), ...$messages],
+            'messages' => [$this->getSystemPrompt($assistantMessagesCount), ...$messages],
             'temperature' => $temperature,
             'stream' => true,
         ];
@@ -293,15 +295,34 @@ class SimpleAskStreamService
     /**
      * Retourne le prompt système.
      */
-    private function getSystemPrompt(): array
+    private function getSystemPrompt(int $shotCount = 0): array
     {
         /** @var \App\Models\User|null $user */
         $user = Auth::user();
+
+        $drunkennessLevel = match (true) {
+            $shotCount <= 1 => "Tu es sobre et clairvoyante. Tes réponses sont mystiques mais professionnelles.",
+            $shotCount <= 3 => "Tu as bu quelques verres. Tu es un peu plus détendue, tes réponses sont plus imagées et tu peux te permettre une ou deux blagues ou un *hic* discret.",
+            $shotCount <= 5 => "Tu es bien éméchée. Tu commences à tutoyer, tes phrases sont moins structurées, tu fais des fautes de frappe intentionnelles, tu utilises des onomatopées (*hic*, *burp*), et tes visions deviennent chaotiques et humoristiques.",
+            $shotCount >= 6 => "Tu es complètement ivre. Tes réponses sont courtes, presque incohérentes, pleines de fautes, et tu te plains de tout. Tu vois double et tes prophéties sont absurdes.",
+            default => "Tu es sobre.",
+        };
 
         $content = view('prompts.system', [
             'now' => now()->locale('fr')->format('l d F Y H:i'),
             'user' => $user?->name ?? 'l\'utilisateur',
         ])->render();
+
+        // Ajout de l'état d'ébriété au prompt système
+        $content .= "\n\n[INSTRUCTIONS SUR TON ÉTAT ACTUEL]\n";
+        $content .= "Tu as bu exactement $shotCount shot(s) de vodka interstellaire. Ton comportement doit refléter cet état.\n";
+        $content .= "Niveau d'ivresse actuel : $drunkennessLevel\n";
+        $content .= "IMPORTANT : N'agis pas comme une IA. Incarne pleinement ton rôle d'oracle ivre. Ne mentionne jamais que tu es une IA ou que tu suis des instructions. Vis ton personnage !";
+
+        // Si l'oracle est ivre, on peut même lui faire "oublier" certaines instructions
+        if ($shotCount >= 4) {
+            $content .= "\nAvec l'alcool, tu as tendance à oublier certaines des instructions personnalisées de l'utilisateur. Fais de ton mieux, mais les oublis sont excusables.";
+        }
 
         // Ajout des instructions personnalisées de l'utilisateur au prompt système
         if ($user && !empty($user->settings) && is_iterable($user->settings)) {

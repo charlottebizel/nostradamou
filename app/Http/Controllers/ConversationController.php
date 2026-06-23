@@ -59,11 +59,17 @@ class ConversationController extends Controller
 
             'user_id' => $user->id,
 
-            'model' => $user->model
+            'model' => $user->preferred_model
                 ?? SimpleAskService::DEFAULT_MODEL,
 
         ]);
 
+        // Ajout du message d'accueil de l'oracle
+        \App\Models\Message::create([
+            'conversation_id' => $conversation->id,
+            'role' => 'assistant',
+            'content' => "Commençons... *hic*",
+        ]);
         return redirect(
             "/chat/{$conversation->id}"
         );
@@ -78,10 +84,8 @@ class ConversationController extends Controller
             abort(403);
         }
 
-        
         $conversation->delete();
 
-    
         return redirect('/chat')->with('toast', [
             'type' => 'success', 
             'message' => 'Conversation supprimée avec succès.'

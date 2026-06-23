@@ -121,7 +121,7 @@ const sendMessage = async () => {
     const aiMsg = reactive({
         id: Date.now() + 1,
         role: 'assistant',
-        content: ''
+        content: 'hmmmmmm je vois...'
     })
     props.conversation.messages.push(aiMsg)
     
@@ -144,12 +144,18 @@ const sendMessage = async () => {
         const reader = response.body.getReader()
         const decoder = new TextDecoder()
 
+        let firstChunk = true;
         while (true) {
             const { done, value } = await reader.read()
             if (done) break
 
             const chunk = decoder.decode(value, { stream: true })
-            aiMsg.content += chunk
+            if (firstChunk) {
+                aiMsg.content = chunk; // Remplace "hmmmmmm je vois..."
+                firstChunk = false;
+            } else {
+                aiMsg.content += chunk
+            }
             scrollToBottom()
         }
 

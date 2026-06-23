@@ -34,7 +34,7 @@ class MessageController extends Controller
             ]);
         }
 
-        // Vérification de l'état de l'oracle (s'endort après 3 réponses)
+        // Vérification de l'état de l'oracle (s'endort après 7 réponses)
         $assistantMessagesCount = $conversation->messages()->where('role', 'assistant')->count();
         
         if ($assistantMessagesCount >= 7) {
@@ -68,40 +68,36 @@ class MessageController extends Controller
             ->toArray();
 
         // 3. Appel IA via Stream
-        return response()->stream(
-            function () use ($messages, $conversation, $request, $streamService) {
-                // 🚀 ÉTAPE 1 : Désactiver complètement les tampons de sortie PHP/Laravel
-                session_write_close(); // Libère la session pour ne pas bloquer les requêtes
-                ini_set('zlib.output_compression', '0');
-                ini_set('implicit_flush', '1');
-                ob_implicit_flush(true);
-                if (function_exists('apache_setenv')) apache_setenv('no-gzip', '1');
+        $answer = ''; // Initialize answer variable
 
-                while (ob_get_level() > 0) {
-                    ob_end_flush();
-                }
+        return response()->stream(function () use ($messages, $conversation, $streamService, $assistantMessagesCount) {
+            // 🚀 ÉTAPE 1 : Désactiver complètement les tampons de sortie PHP/Laravel
+            session_write_close(); // Libère la session pour ne pas bloquer les requêtes
+            ini_set('zlib.output_compression', '0');
+            ini_set('implicit_flush', '1');
+            ob_implicit_flush(true);
+            if (function_exists('apache_setenv')) {
+                apache_setenv('no-gzip', '1');
+            }
+            while (ob_get_level() > 0) {
+                ob_end_flush();
+            }
 
-                $answer = $streamService->streamToOutput(
-                    $messages,
-                    $conversation->model,
-                    1.0,
-                    null
-                );
+            $answer = $streamService->streamToOutput($messages, $conversation->model, 1.0, null, false, $assistantMessagesCount);
 
-                // 4. Sauvegarde réponse IA une fois le stream terminé
+            // 4. Sauvegarde réponse IA une fois le stream terminé
+            if (!empty($answer)) {
                 Message::create([
                     'conversation_id' => $conversation->id,
                     'role' => 'assistant',
                     'content' => $answer,
                 ]);
-            },
-            200,
-            [
-                'Content-Type' => 'text/event-stream; charset=utf-8', // Mieux que text/plain pour forcer le proxy
-                'Cache-Control' => 'no-cache, no-store, must-revalidate',
-                'X-Accel-Buffering' => 'no',
-                'Content-Encoding' => 'none', // 🚀 ÉTAPE 2 : Empêche Apache (Laragon) de compresser et bloquer le stream
-            ]
-        );
+            }
+        }, 200, [
+            'Content-Type' => 'text/event-stream; charset=utf-8', // Mieux que text/plain pour forcer le proxy
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'X-Accel-Buffering' => 'no',
+            'Content-Encoding' => 'none', // 🚀 ÉTAPE 2 : Empêche Apache (Laragon) de compresser et bloquer le stream
+        ]);
     }
 }

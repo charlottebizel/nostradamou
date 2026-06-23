@@ -28,10 +28,9 @@ yarn-error.log
 /.vscode
 /.zed
 
-# Secrets et clés API
+# clés API
 .env.local
 .env.*.local
-secrets.json
 credentials.json
 apikeys.json
 
