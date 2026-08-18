@@ -11,6 +11,8 @@ class ConversationController extends Controller
 {
     public function index(Request $request, SimpleAskService $simpleAskService)
     {
+        $this->authorize('viewAny', Conversation::class);
+
         /** @var \App\Models\User $user */
         $user = $request->user();
 
@@ -32,6 +34,8 @@ class ConversationController extends Controller
         Conversation $conversation,
         SimpleAskService $simpleAskService
     ) {
+        $this->authorize('view', $conversation);
+
         /** @var \App\Models\User $user */
         $user = $request->user();
 
@@ -51,6 +55,8 @@ class ConversationController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize('create', Conversation::class);
+
         /** @var \App\Models\User $user */
         $user = $request->user();
 
@@ -77,12 +83,7 @@ class ConversationController extends Controller
 
     public function destroy(Request $request, \App\Models\Conversation $conversation)
     {
-        /** @var \App\Models\User $user */
-        $user = $request->user();
-
-        if ($conversation->user_id !== $user->id) {
-            abort(403);
-        }
+        $this->authorize('delete', $conversation);
 
         $conversation->delete();
 

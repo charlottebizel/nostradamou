@@ -13,6 +13,8 @@ class UserController extends Controller
      */
     public function updateModel(Request $request)
     {
+        $this->authorize('update', $request->user());
+
         $request->validate(['model' => 'required|string']);
 
         $request->user()->update(['preferred_model' => $request->model]);
@@ -31,6 +33,8 @@ class UserController extends Controller
      */
     public function updateSettings(Request $request): RedirectResponse
     {
+        $this->authorize('update', $request->user());
+
         /** @var \App\Models\User $user */
         $user = $request->user();
 

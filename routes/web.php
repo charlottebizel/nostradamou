@@ -21,22 +21,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::redirect('/dashboard', '/chat')->name('dashboard');
 });
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/chat',
-        [ConversationController::class, 'index']);
+        [ConversationController::class, 'index'])
+        ->name('chat.index');
 
     Route::post('/chat',
-        [ConversationController::class, 'store']);
+        [ConversationController::class, 'store'])
+        ->name('chat.store');
 
     Route::get('/chat/{conversation}',
-        [ConversationController::class, 'show']);
+        [ConversationController::class, 'show'])
+        ->name('chat.show');
 
     Route::post('/chat/{conversation}/message',
-        [MessageController::class, 'store']);
+        [MessageController::class, 'store'])
+        ->name('chat.message.store');
         
     Route::delete('/chat/{conversation}',
-        [ConversationController::class, 'destroy']);
+        [ConversationController::class, 'destroy'])
+        ->name('chat.destroy');
     
     Route::post('/user/settings', [UserController::class, 'updateSettings'])
         ->name('user.settings.update');

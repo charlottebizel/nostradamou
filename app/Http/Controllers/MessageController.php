@@ -16,6 +16,8 @@ class MessageController extends Controller
         SimpleAskService $service,
         SimpleAskStreamService $streamService
     ) {
+        $this->authorize('create', [Message::class, $conversation]);
+
         $request->validate([
             'message' => 'required|string'
         ]);
