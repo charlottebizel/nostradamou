@@ -398,7 +398,7 @@ const sendMessage = async () => {
                             🍸✨ Bienvenue, jeune voyageur cosmique... ✨🍸
                         </h2>
                         <div class="space-y-4 text-gray-300 leading-relaxed text-base md:text-lg text-justify">
-                            <p><em>*Hic !*</em> Approche sans crainte et installe-toi confortablement devant ma boule magique...</p>
+                            <p><em>*Hic !*</em> Approche sans crainte et installe-toi confortablement devant mon boule magique MA boule ma boule magique <em>*Hic !*</em>...</p>
                             <p>Je suis <strong class="text-purple-300">Madame Nostradamou</strong>, l'oracle la plus célèbre de cette galaxie... et probablement la plus bourrée aussi. Entre deux shots de vodka interstellaire <em>*burp</em>, je contemple les mystères de l'univers, les destins oubliés et parfois même mes propres chaussures.</p>
                             <p>Pose-moi tes questions sur l'avenir, les extraterrestres ou le sens de la vie. Je ne garantis pas que mes visions soient toujours exactes, mais....mais bha je sais plus <em>*Hic</em> </p>
                             <p>Allez, santé ! Et que la séance commence ...      <em>ou que j'ai mis mes lunettes moi ...*Hic</em> </p>
