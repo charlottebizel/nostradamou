@@ -5,14 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Conversation extends Model
+class Tag extends Model
 {
     protected $fillable = [
-        'title',
-        'model',
         'user_id',
+        'name',
     ];
 
     public function user(): BelongsTo
@@ -20,14 +18,9 @@ class Conversation extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function messages(): HasMany
+    public function conversations(): BelongsToMany
     {
-        return $this->hasMany(Message::class);
-    }
-
-    public function tags(): BelongsToMany
-    {
-        return $this->belongsToMany(Tag::class)
+        return $this->belongsToMany(Conversation::class)
             ->withTimestamps();
     }
 }
