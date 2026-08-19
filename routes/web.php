@@ -46,6 +46,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/chat/{conversation}/tags',
         [ConversationController::class, 'syncTags'])
         ->name('chat.tags.sync');
+
+    Route::post('/chat/{conversation}/fork',
+        [ConversationController::class, 'fork'])
+        ->name('chat.fork');
         
     Route::delete('/chat/{conversation}',
         [ConversationController::class, 'destroy'])

@@ -106,6 +106,41 @@ class ConversationController extends Controller
         ]);
     }
 
+    public function fork(Request $request, Conversation $conversation)
+    {
+        $this->authorize('view', $conversation);
+
+        /** @var \App\Models\User $user */
+        $user = $request->user();
+
+        // Créer une nouvelle conversation avec le même modèle
+        $forked = Conversation::query()->create([
+            'user_id' => $user->id,
+            'model' => $conversation->model,
+            'title' => $conversation->title ? "{$conversation->title} (copie)" : null,
+        ]);
+
+        // Copier tous les messages de la conversation source
+        $conversation->messages()
+            ->orderBy('id')
+            ->get()
+            ->each(function ($message) use ($forked) {
+                \App\Models\Message::create([
+                    'conversation_id' => $forked->id,
+                    'role' => $message->role,
+                    'content' => $message->content,
+                ]);
+            });
+
+        // Copier les tags de la conversation source
+        $forked->tags()->sync($conversation->tags()->pluck('tags.id'));
+
+        return redirect("/chat/{$forked->id}")->with('toast', [
+            'type' => 'success',
+            'message' => 'Conversation dupliquée avec succès.',
+        ]);
+    }
+
     public function syncTags(Request $request, Conversation $conversation)
     {
         $this->authorize('update', $conversation);

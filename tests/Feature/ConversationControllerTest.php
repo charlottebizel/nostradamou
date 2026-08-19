@@ -191,3 +191,64 @@ test('les tags sont chargés avec les conversations', function () {
             ->where('tags.0.name', 'Important')
         );
 });
+
+test('un utilisateur peut dupliquer (fork) une conversation avec ses messages et tags', function () {
+    $user = User::factory()->create();
+
+    $conversation = Conversation::create([
+        'user_id' => $user->id,
+        'model' => SimpleAskService::DEFAULT_MODEL,
+        'title' => 'Ma conversation',
+    ]);
+
+    Message::create([
+        'conversation_id' => $conversation->id,
+        'role' => 'user',
+        'content' => 'Question 1',
+    ]);
+
+    Message::create([
+        'conversation_id' => $conversation->id,
+        'role' => 'assistant',
+        'content' => 'Réponse 1',
+    ]);
+
+    $tag = Tag::create([
+        'user_id' => $user->id,
+        'name' => 'important',
+    ]);
+
+    $conversation->tags()->attach($tag);
+
+    $this->actingAs($user)
+        ->post(route('chat.fork', $conversation))
+        ->assertRedirect()
+        ->assertSessionHas('toast');
+
+    $forked = Conversation::where('id', '!=', $conversation->id)->first();
+    expect($forked)->not->toBeNull()
+        ->and($forked->user_id)->toBe($user->id)
+        ->and($forked->model)->toBe(SimpleAskService::DEFAULT_MODEL)
+        ->and($forked->title)->toBe('Ma conversation (copie)')
+        ->and($forked->messages()->count())->toBe(2)
+        ->and($forked->messages()->pluck('content')->all())
+        ->toBe(['Question 1', 'Réponse 1'])
+        ->and($forked->tags()->count())->toBe(1)
+        ->and($forked->tags()->first()->name)->toBe('important');
+});
+
+test('un utilisateur ne peut pas dupliquer (fork) la conversation d\'un autre utilisateur', function () {
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+
+    $conversation = Conversation::create([
+        'user_id' => $otherUser->id,
+        'model' => SimpleAskService::DEFAULT_MODEL,
+    ]);
+
+    $this->actingAs($user)
+        ->post(route('chat.fork', $conversation))
+        ->assertForbidden();
+
+    expect(Conversation::count())->toBe(1);
+});
