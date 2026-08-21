@@ -10,6 +10,7 @@ const props = defineProps({
     conversations: Array,
     conversation: Object,
     models: Array,
+    tags: Array,
 })
 
 const form = useForm({
@@ -104,6 +105,40 @@ const scrollToBottom = async () => {
         messagesContainer.value.scrollTop =
             messagesContainer.value.scrollHeight
     }
+}
+
+// Gestion des tags
+const tagInputs = reactive({})
+
+const addTag = (conversation) => {
+    const name = (tagInputs[conversation.id] || '').trim()
+    if (!name) return
+
+    const existing = conversation.tags || []
+    if (existing.some(t => t.name.toLowerCase() === name.toLowerCase())) {
+        tagInputs[conversation.id] = ''
+        return
+    }
+
+    conversation.tags = [...existing, { id: Date.now(), name }]
+    tagInputs[conversation.id] = ''
+    syncTags(conversation)
+}
+
+const removeTag = (conversation, tag) => {
+    conversation.tags = (conversation.tags || []).filter(t => t.id !== tag.id)
+    syncTags(conversation)
+}
+
+const syncTags = (conversation) => {
+    router.post(`/chat/${conversation.id}/tags`, {
+        tags: (conversation.tags || []).map(t => t.name)
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            router.reload({ only: ['conversations', 'tags'] })
+        }
+    })
 }
 
 const sendMessage = async () => {
@@ -233,6 +268,44 @@ const sendMessage = async () => {
                 >
                     {{ c.title ?? 'Nouvelle conversation' }}
                 </Link>
+
+                <!-- TAGS DE LA CONVERSATION -->
+                <div class="mt-2 flex flex-wrap gap-1.5">
+                    <span
+                        v-for="tag in c.tags"
+                        :key="tag.id"
+                        class="inline-flex items-center gap-1 text-xs bg-purple-800/60 text-purple-200 border border-purple-600/50 rounded-full px-2 py-0.5"
+                    >
+                        #{{ tag.name }}
+                        <button
+                            @click.prevent="removeTag(c, tag)"
+                            class="text-purple-400 hover:text-red-400 transition-colors"
+                            title="Retirer le tag"
+                        >
+                            ✕
+                        </button>
+                    </span>
+                </div>
+
+                <!-- AJOUT DE TAG -->
+                <form
+                    @submit.prevent="addTag(c)"
+                    class="mt-2 flex gap-1"
+                >
+                    <input
+                        v-model="tagInputs[c.id]"
+                        type="text"
+                        placeholder="+ tag"
+                        class="flex-1 min-w-0 text-xs bg-gray-900 border border-purple-800/50 rounded px-2 py-1 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none"
+                    />
+                    <button
+                        type="submit"
+                        class="text-xs bg-purple-700 hover:bg-purple-600 text-white rounded px-2 py-1 transition-colors"
+                        title="Ajouter le tag"
+                    >
+                        +
+                    </button>
+                </form>
     
                 <!-- BOUTON DE SUPPRESSION -->
                 <DeleteConversation :conversation="c" />
@@ -401,7 +474,7 @@ const sendMessage = async () => {
                             <p><em>*Hic !*</em> Approche sans crainte et installe-toi confortablement devant mon boule magique MA boule ma boule magique <em>*Hic !*</em>...</p>
                             <p>Je suis <strong class="text-purple-300">Madame Nostradamou</strong>, l'oracle la plus célèbre de cette galaxie... et probablement la plus bourrée aussi. Entre deux shots de vodka interstellaire <em>*burp</em>, je contemple les mystères de l'univers, les destins oubliés et parfois même mes propres chaussures.</p>
                             <p>Pose-moi tes questions sur l'avenir, les extraterrestres ou le sens de la vie. Je ne garantis pas que mes visions soient toujours exactes, mais....mais bha je sais plus <em>*Hic</em> </p>
-                            <p>Allez, santé ! Et que la séance commence ...      <em>ou que j'ai mis mes lunettes moi ...*Hic</em> </p>
+                            <p>Allez, santé ! Et que la séance commence ...      <em>ou que j'ai mis mes lunettes moi ...*Hic</em> </p>laragon
                         </div>
                         <div class="pt-5 mt-5 border-t border-purple-800/30">
                             <p class="text-xl md:text-2xl text-blue-400 font-serif mb-1">🔮 Que souhaites-tu savoir aujourd'hui ?</p>
